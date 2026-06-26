@@ -1,0 +1,16 @@
+schema: 1
+story: '1.3'
+gate: PASS
+status_reason: 'Todos os 8 ACs satisfeitos. Roteamento React/Vite configurado corretamente, build TypeScript limpo em 749ms, Layout e types alinhados com a arquitetura.'
+reviewer: 'Quinn'
+updated: '2026-06-26T00:00:00Z'
+top_issues:
+  - id: 'ARCH-001'
+    severity: low
+    finding: 'hide.ts usa campo "class" mas modelo Pydantic hide.py exporta "class_name" — pode causar desalinhamento ao consumir a API no Epic 3'
+    suggested_action: 'Verificar serialização do router no Epic 2 e alinhar o campo antes de implementar o Epic 3'
+  - id: 'TEST-001'
+    severity: low
+    finding: 'Nenhum teste unitário para componentes React (Layout, pages, routing)'
+    suggested_action: 'Adicionar testes com React Testing Library nos próximos sprints'
+waiver: { active: false }
