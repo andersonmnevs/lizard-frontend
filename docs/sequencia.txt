@@ -1,0 +1,31 @@
+  Sequência Recomendada
+
+  @architect  →  @sm  →  @po  →  @dev  →  @qa  →  @devops
+
+  Etapa 1 — @architect
+
+  Validar e detalhar a arquitetura antes de criar as stories:
+  - Definir epics (Backend API / Frontend / Exportação)
+  - Mapear dependências entre stories (o frontend precisa da API)
+  - Confirmar estrutura de pastas lizard-web/
+  - Listar endpoints com contratos (request/response)
+
+  Etapa 2 — @sm (por story)
+
+  Criar as stories a partir dos epics definidos pelo @architect. Cada story = 1 unidade implementável.
+
+  Etapa 3 — @po (por story)
+
+  Validar cada story com o checklist de 10 pontos antes de liberar para dev.
+
+  Etapa 4 — @dev (por story)
+
+  Implementar. Ordem natural: infraestrutura → backend → frontend → exportação.
+
+  Etapa 5 — @qa (por story)
+
+  QA gate após cada story. Pode rodar QA Loop se encontrar problemas.
+
+  Etapa 6 — @devops
+
+  Push + PR após stories aprovadas pelo QA.sim
