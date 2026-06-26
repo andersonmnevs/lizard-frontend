@@ -1,3 +1,3 @@
 export default function OpDetail() {
-  return <div>Detalhe da OP</div>
+  return <h1>Detalhe da OP</h1>
 }

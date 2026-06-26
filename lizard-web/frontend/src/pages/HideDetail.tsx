@@ -1,3 +1,3 @@
 export default function HideDetail() {
-  return <div>Detalhe do Couro</div>
+  return <h1>Detalhe do Couro</h1>
 }

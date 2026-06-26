@@ -1,3 +1,3 @@
 export default function OpList() {
-  return <div>Lista de OPs</div>
+  return <h1>Lista de OPs</h1>
 }
