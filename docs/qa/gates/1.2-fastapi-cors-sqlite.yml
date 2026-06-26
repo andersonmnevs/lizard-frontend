@@ -1,0 +1,12 @@
+schema: 1
+story: '1.2'
+gate: PASS
+status_reason: 'Todos os 9 ACs satisfeitos. Infraestrutura FastAPI com CORS, health endpoint e conexão SQLite read-only implementada corretamente sem vulnerabilidades de segurança.'
+reviewer: 'Quinn'
+updated: '2026-06-26T00:00:00Z'
+top_issues:
+  - id: 'TEST-001'
+    severity: low
+    finding: 'Nenhum teste unitário formal para config.py, db.py e health endpoint'
+    suggested_action: 'Adicionar testes unitários com mock do SQLite nos próximos sprints (débito técnico baixo risco para story de infraestrutura base)'
+waiver: { active: false }
