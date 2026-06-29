@@ -26,6 +26,14 @@ class OpDetail(BaseModel):
     class_distribution: list[ClassDistribution] = []
 
 
+class OpListResponse(BaseModel):
+    items: list[OpSummary]
+    total: int
+    page: int
+    limit: int
+    pages: int
+
+
 class DashboardPeriod(BaseModel):
     total_hides: int
     avg_yield: Optional[float] = None
