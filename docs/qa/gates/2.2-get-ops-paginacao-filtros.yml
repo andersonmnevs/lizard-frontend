@@ -1,0 +1,37 @@
+schema: 1
+story: '2.2'
+gate: PASS
+status_reason: >
+  Todos os 11 ACs verificados e passando via testes live. Implementação correta de
+  paginação, filtros dinâmicos com parameterized statements, validação 422, e retorno
+  seguro com dados vazios. Ausência de testes unitários automatizados é debt aceitável
+  para MVP — funcionalidade validada manualmente de forma abrangente.
+reviewer: Quinn
+updated: '2026-06-29T19:00:00Z'
+top_issues:
+  - id: 'TEST-001'
+    severity: medium
+    finding: 'Nenhum teste unitário/integração automatizado para GET /ops'
+    suggested_action: >
+      Adicionar pytest com httpx TestClient cobrindo: sem filtros, cada filtro isolado,
+      filtros combinados, paginação, limit>100, banco vazio. Prioridade: próxima sprint.
+waiver:
+  active: false
+
+checks:
+  code_review: PASS
+  unit_tests: CONCERNS (ausente — validado manualmente)
+  acceptance_criteria: PASS (11/11)
+  no_regressions: PASS (GET /dashboard intacto)
+  performance: PASS (query com LIMIT/OFFSET, COUNT separado)
+  security: PASS (parameterized queries, no SQL injection, DB read-only)
+  documentation: PASS (story atualizada com file list e ACs)
+
+security_scan:
+  sql_injection: PASS
+  path_traversal: N/A
+  hardcoded_secrets: PASS
+  owasp_a03: PASS
+  note: >
+    where_clause interpolado na f-string contém apenas strings literais predefinidas
+    (ex: "date(GrdDat) >= ?"). Dados de usuário sempre passados via lista params — seguro.
