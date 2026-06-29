@@ -28,4 +28,4 @@
 
   Etapa 6 — @devops
 
-  Push + PR após stories aprovadas pelo QA.sim
+  Push + PR após stories aprovadas pelo QA.
