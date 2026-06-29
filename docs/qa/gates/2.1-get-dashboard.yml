@@ -1,0 +1,22 @@
+schema: 1
+story: '2.1'
+gate: PASS
+status_reason: >
+  Todos os 8 ACs verificados. Issues detectados (class_name→class, HTTPException
+  não usado) corrigidos durante o gate. Response JSON conforme contrato da arquitetura.
+reviewer: Quinn
+updated: '2026-06-29T00:00:00Z'
+top_issues: []
+waiver:
+  active: false
+fixes_applied:
+  - id: 'REQ-001'
+    severity: high
+    finding: "ClassDistribution.class_name serializa como 'class_name' em vez de 'class'."
+    fix_applied: "Adicionado Field(serialization_alias='class') e ConfigDict(populate_by_name=True)."
+    status: resolved
+  - id: 'MNT-001'
+    severity: low
+    finding: "HTTPException importado mas não utilizado em ops.py."
+    fix_applied: "Removido HTTPException da linha de import."
+    status: resolved
