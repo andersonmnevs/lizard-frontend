@@ -1,4 +1,6 @@
 import io
+import openpyxl
+from openpyxl.styles import Font
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from weasyprint import HTML
@@ -130,4 +132,105 @@ def export_op_pdf(op_id: str):
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="op-{op_id}.pdf"'},
+    )
+
+
+@router.get("/ops/{op_id}/export/xlsx")
+def export_op_xlsx(op_id: str):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM grading_results WHERE GrdOp = ?",
+            (op_id,),
+        )
+        if cursor.fetchone()["cnt"] == 0:
+            raise HTTPException(status_code=404, detail="OP não encontrada")
+
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) as total_hides,
+                ROUND(AVG(GrdAre), 2) as avg_area,
+                ROUND(AVG(GrdUsaPer), 2) as avg_yield,
+                MIN(date(GrdDat)) as date_from,
+                MAX(date(GrdDat)) as date_to
+            FROM grading_results
+            WHERE GrdOp = ?
+            """,
+            (op_id,),
+        )
+        summary = cursor.fetchone()
+
+        cursor.execute(
+            """
+            SELECT GrdCla as class_name, COUNT(*) as count
+            FROM grading_results
+            WHERE GrdOp = ?
+            GROUP BY GrdCla
+            ORDER BY count DESC
+            """,
+            (op_id,),
+        )
+        classes = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT
+                GrdHidNum as hide_num,
+                GrdDat as processed_at,
+                GrdCla as class_name,
+                GrdUsaPer as yield_pct,
+                GrdAre as area
+            FROM grading_results
+            WHERE GrdOp = ?
+            ORDER BY GrdHidNum ASC
+            """,
+            (op_id,),
+        )
+        hides = cursor.fetchall()
+    finally:
+        conn.close()
+
+    wb = openpyxl.Workbook()
+
+    ws_hides = wb.active
+    ws_hides.title = "Couros"
+    headers = ["Nº Couro", "Data/Hora", "Classe", "Aproveitamento (%)", "Área (m²)"]
+    ws_hides.append(headers)
+    for cell in ws_hides[1]:
+        cell.font = Font(bold=True)
+    for h in hides:
+        ws_hides.append([
+            h["hide_num"],
+            h["processed_at"],
+            h["class_name"],
+            h["yield_pct"],
+            h["area"],
+        ])
+
+    ws_summary = wb.create_sheet("Resumo")
+    total = summary["total_hides"]
+    ws_summary.append(["OP", op_id])
+    ws_summary.append(["Período", f"{summary['date_from']} a {summary['date_to']}"])
+    ws_summary.append([])
+    ws_summary.append(["Total de Couros", total])
+    ws_summary.append(["Aproveitamento Médio (%)", summary["avg_yield"]])
+    ws_summary.append(["Área Média (m²)", summary["avg_area"]])
+    ws_summary.append([])
+    ws_summary.append(["Distribuição de Classes"])
+    ws_summary.append(["Classe", "Couros", "%"])
+    for c in classes:
+        pct = round(c["count"] / total * 100, 1) if total > 0 else 0
+        ws_summary.append([c["class_name"], c["count"], pct])
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="op-{op_id}.xlsx"'},
     )
