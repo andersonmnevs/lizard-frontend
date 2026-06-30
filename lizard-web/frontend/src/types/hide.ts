@@ -1,3 +1,20 @@
+export interface HideItem {
+  id: number
+  hide_num: string
+  processed_at: string
+  class: string
+  yield_pct: number | null
+  area: number | null
+  op: string
+}
+
+export interface HideListResponse {
+  items: HideItem[]
+  total: number
+  page: number
+  limit: number
+}
+
 export interface Hide {
   id: number
   hide_num: string
