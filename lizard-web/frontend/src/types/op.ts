@@ -30,6 +30,14 @@ export interface OpSummary {
   predominant_class: string | null
 }
 
+export interface OpListResponse {
+  items: OpSummary[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
 export interface OpDetail {
   op: string
   total_hides: number
