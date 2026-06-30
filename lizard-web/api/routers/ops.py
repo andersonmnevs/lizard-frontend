@@ -1,6 +1,6 @@
 import math
 from typing import Optional
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from ..db import get_db_connection
 from ..models.op import (
     DashboardResponse,
@@ -9,7 +9,9 @@ from ..models.op import (
     RecentOp,
     OpSummary,
     OpListResponse,
+    OpDetail,
 )
+from ..models.hide import HideItem, HideListResponse
 
 router = APIRouter(tags=["ops"])
 
@@ -93,6 +95,123 @@ def list_ops(
             limit=limit,
             pages=pages,
         )
+    finally:
+        conn.close()
+
+
+@router.get("/ops/{op_id}", response_model=OpDetail)
+def get_op_detail(op_id: str):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM grading_results WHERE GrdOp = ?",
+            (op_id,),
+        )
+        if cursor.fetchone()["cnt"] == 0:
+            raise HTTPException(status_code=404, detail="OP não encontrada")
+
+        cursor.execute(
+            """
+            SELECT
+                GrdOp as op,
+                COUNT(*) as total_hides,
+                ROUND(AVG(GrdAre), 2) as avg_area,
+                ROUND(AVG(GrdUsaPer), 2) as avg_yield
+            FROM grading_results
+            WHERE GrdOp = ?
+            """,
+            (op_id,),
+        )
+        row = cursor.fetchone()
+
+        cursor.execute(
+            """
+            SELECT GrdCla as class_name, COUNT(*) as count
+            FROM grading_results
+            WHERE GrdOp = ?
+            GROUP BY GrdCla
+            ORDER BY count DESC
+            """,
+            (op_id,),
+        )
+        total = row["total_hides"]
+        class_distribution = [
+            ClassDistribution(
+                class_name=r["class_name"],
+                count=r["count"],
+                pct=round(r["count"] / total * 100, 1),
+            )
+            for r in cursor.fetchall()
+        ]
+
+        return OpDetail(
+            op=row["op"],
+            total_hides=total,
+            avg_area=row["avg_area"],
+            avg_yield=row["avg_yield"],
+            class_distribution=class_distribution,
+        )
+    finally:
+        conn.close()
+
+
+@router.get("/ops/{op_id}/hides", response_model=HideListResponse)
+def list_op_hides(
+    op_id: str,
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=50, ge=1, le=200),
+):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM grading_results WHERE GrdOp = ?",
+            (op_id,),
+        )
+        if cursor.fetchone()["cnt"] == 0:
+            raise HTTPException(status_code=404, detail="OP não encontrada")
+
+        cursor.execute(
+            "SELECT COUNT(*) as total FROM grading_results WHERE GrdOp = ?",
+            (op_id,),
+        )
+        total = cursor.fetchone()["total"]
+
+        offset = (page - 1) * limit
+        cursor.execute(
+            """
+            SELECT
+                rowid as id,
+                GrdHidNum as hide_num,
+                GrdDat as processed_at,
+                GrdCla as class_name,
+                GrdUsaPer as yield_pct,
+                GrdAre as area,
+                GrdOp as op
+            FROM grading_results
+            WHERE GrdOp = ?
+            ORDER BY GrdHidNum ASC
+            LIMIT ? OFFSET ?
+            """,
+            (op_id, limit, offset),
+        )
+        items = [
+            HideItem(
+                id=r["id"],
+                hide_num=r["hide_num"],
+                processed_at=r["processed_at"],
+                class_name=r["class_name"],
+                yield_pct=r["yield_pct"],
+                area=r["area"],
+                op=r["op"],
+            )
+            for r in cursor.fetchall()
+        ]
+
+        return HideListResponse(items=items, total=total, page=page, limit=limit)
     finally:
         conn.close()
 
