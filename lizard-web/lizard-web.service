@@ -1,0 +1,16 @@
+[Unit]
+Description=Lizard Web — Portal de Consulta de Couros
+After=network.target
+
+[Service]
+Type=simple
+User=lizard
+WorkingDirectory=/opt/lizard-web
+Environment="SQLITE_PATH=/opt/lizard/data/results.db"
+Environment="RESULTS_DIR=/opt/lizard/results"
+ExecStart=/opt/lizard-web/api/.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
