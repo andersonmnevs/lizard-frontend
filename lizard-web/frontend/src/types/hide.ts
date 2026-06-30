@@ -27,3 +27,5 @@ export interface Hide {
   prev_hide_id: number | null
   next_hide_id: number | null
 }
+
+export type HideDetail = Hide
